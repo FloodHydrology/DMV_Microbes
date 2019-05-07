@@ -78,8 +78,101 @@ df<-df %>%
 
 
 #3.0 Gap filling------------------------------------------------------------------------------------
-#Do this later
+#3.1 BB wetland well--------------------------------------------------------------------------------
+#Select water level data
+temp<-df %>%
+  #Select time series of interest
+  filter(site == 'BB Wetland Well Shallow' |
+         site == 'BB Upland Well 1') %>%
+  #Create wide dataframe
+  spread(site, -day) %>% 
+  rename(y_sw = 'BB Wetland Well Shallow',
+         y_gw = 'BB Upland Well 1')
 
+#Convert NA in GW to SW values
+temp<-temp %>% mutate(y_gw = if_else(is.na(y_gw),
+                             y_sw, 
+                             y_gw), 
+                      site = "BB Upland Well 1") %>%
+  select(day, site, y_gw) %>% rename(waterLevel = y_gw)
+
+#Splice into df
+df<-df %>% 
+  filter(site != "BB Upland Well 1") %>%
+  bind_rows(.,temp)
+
+#3.2 DB wetland well--------------------------------------------------------------------------------
+#Select water level data
+temp<-df %>%
+  #Select time series of interest
+  filter(site == 'DB Wetland Well Shallow' |
+           site == 'DB Upland Well 1') %>%
+  #Create wide dataframe
+  spread(site, -day) %>% 
+  rename(y_sw = 'DB Wetland Well Shallow',
+         y_gw = 'DB Upland Well 1')
+
+#Convert NA in GW to SW values
+temp<-temp %>% mutate(y_gw = if_else(is.na(y_gw),
+                                     y_sw, 
+                                     y_gw), 
+                      site = "DB Upland Well 1") %>%
+  select(day, site, y_gw) %>% rename(waterLevel = y_gw)
+
+#Splice into df
+df<-df %>% 
+  filter(site != "DB Upland Well 1") %>%
+  bind_rows(.,temp)
+
+#3.3 TB wetland well--------------------------------------------------------------------------------
+#Select water level data
+temp<-df %>%
+  #Select time series of interest
+  filter(str_detect(site,"TB")) %>%
+  #Create wide dataframe
+  spread(site, -day) %>% 
+  rename(y_sw = 'TB Wetland Well Shallow',
+         y_gw_1 = 'TB Upland Well 1',
+         y_gw_2 = 'TB Upland Well 2',
+         y_gw_3 = 'TB Upland Well 3')
+
+#Create model 
+model<-lm(temp$y_gw_1~temp$y_gw_2)
+
+#Convert NA in GW to SW values
+temp<-temp %>% mutate(y_gw_1 = if_else(is.na(y_gw_1),
+                                       model$coefficients[2]*y_gw_2+model$coefficients[1], 
+                                       y_gw_1), 
+                      site = "TB Upland Well 1") %>%
+  select(day, site, y_gw_1) %>% rename(waterLevel = y_gw_1)
+
+#Splice into df
+df<-df %>% 
+  filter(site != "TB Upland Well 1") %>%
+  bind_rows(.,temp)
+
+#3.4 QB wetland well--------------------------------------------------------------------------------
+#Select water level data
+temp<-df %>%
+  #Select time series of interest
+  filter(site == 'QB Wetland Well Shallow' |
+         site == "DF Wetland Well Shallow") %>%
+  #Create wide dataframe
+  spread(site, -day) %>% 
+  rename(y_sw_1 = 'QB Wetland Well Shallow',
+         y_sw_2 = "DF Wetland Well Shallow")
+
+#Convert NA in GW to SW values
+temp<-temp %>% mutate(y_sw_1 = if_else(is.na(y_sw_1),
+                                       y_sw_2-0.12, #BAsed on lining up early winter points
+                                       y_sw_1), 
+                      site = "QB Upland Well 1") %>%
+  select(day, site, y_sw_1) %>% rename(waterLevel = y_sw_1)
+
+#Splice into df
+df<-df %>% 
+  filter(site != "QB Upland Well 1") %>%
+  bind_rows(.,temp)
 
 #4.0 Estimate Deth to Water Table-------------------------------------------------------------------
 #Create to estimate depth to water table at each location for each timestep
@@ -120,7 +213,7 @@ depth_fun<-function(wetland_code){
     sample<-sample[n,]
     
     #Create interpolation to estimate inundation extent
-    inundation_fun<-approxfun(xs$elevation, xs$distance)
+    inundation_fun<-approxfun(xs$elevation, xs$distance, yleft = 0)
     
     #Define horizontal distances 
     temp <- temp %>%
@@ -160,5 +253,11 @@ depth_fun<-function(wetland_code){
 }
 
 #Apply function to wetlands of interest
-depth_fun("ND")
+depth_fun('QB') %>%
+  mutate(station = paste(station)) %>%
+  filter(str_detect(station,"SC")) %>%
+  group_by(station) %>% summarise(Depth= mean(d_n, na.rm=T)) %>%
+  ggplot(aes(x=station, y=Depth)) +
+    geom_bar(stat="identity") + theme_bw()
 
+#Work in the AM -- check out why there are NA's in QB
