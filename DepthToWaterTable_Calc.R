@@ -89,23 +89,31 @@ df<-df %>%
   summarise(waterLevel = mean(waterLevel, na.rm=T))
 
 #3.0 Gap filling------------------------------------------------------------------------------------
-#3.1 BB wetland well--------------------------------------------------------------------------------
-#Select water level data
+#3.1 BB Upland Well--------------------------------------------------------------------------------
+#Gather data
 temp<-df %>%
   #Select time series of interest
-  filter(site == 'BB Wetland Well Shallow' |
-         site == 'BB Upland Well 1') %>%
+  filter(site == 'BB Upland Well 1' |
+           site == "TB Upland Well 3") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
-  rename(y_sw = 'BB Wetland Well Shallow',
-         y_gw = 'BB Upland Well 1')
+  rename(upland = 'BB Upland Well 1',
+         fill   = "TB Upland Well 3") 
 
-#Convert NA in GW to SW values
-temp<-temp %>% mutate(y_gw = if_else(is.na(y_gw),
-                             y_sw, 
-                             y_gw), 
-                      site = "BB Upland Well 1") %>%
-  select(day, site, y_gw) %>% rename(waterLevel = y_gw)
+#Develop model
+model<-lm(upland ~ fill, data=temp)
+summary(model)
+
+#Add model predictions and organize for output
+temp<-temp %>%
+  #Apply model
+  mutate(predicted = predict(model, data.frame(fill = fill))) %>%
+  #Gap fill
+  mutate(waterLevel = if_else(is.na(upland), 
+                              predicted, 
+                              upland), 
+         site = 'BB Upland Well 1') %>%
+  select(day, site, waterLevel)
 
 #Splice into df
 df<-df %>% 
@@ -115,27 +123,36 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.2 DB wetland well--------------------------------------------------------------------------------
+#3.2 DB Upland Well--------------------------------------------------------------------------------
 #Select water level data
+#Gather data
 temp<-df %>%
   #Select time series of interest
-  filter(site == 'DB Wetland Well Shallow' |
-           site == 'DB Upland Well 1') %>%
+  filter(site == 'DB Upland Well 1' |
+           site == "TB Upland Well 2") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
-  rename(y_sw = 'DB Wetland Well Shallow',
-         y_gw = 'DB Upland Well 1')
+  rename(upland = 'DB Upland Well 1',
+         fill   = "TB Upland Well 2") 
 
-#Convert NA in GW to SW values
-temp<-temp %>% mutate(y_gw = if_else(is.na(y_gw),
-                                     y_sw, 
-                                     y_gw), 
-                      site = "DB Upland Well 1") %>%
-  select(day, site, y_gw) %>% rename(waterLevel = y_gw)
+#Develop model
+model<-lm(upland ~ fill, data=temp)
+summary(model)
+
+#Add model predictions and organize for output
+temp<-temp %>%
+  #Apply model
+  mutate(predicted = predict(model, data.frame(fill = fill))) %>%
+  #Gap fill
+  mutate(waterLevel = if_else(is.na(upland), 
+                              predicted, 
+                              upland), 
+         site = 'DB Upland Well 1') %>%
+  select(day, site, waterLevel)
 
 #Splice into df
 df<-df %>% 
-  filter(site != "DB Upland Well 1") %>%
+  filter(site != 'DB Upland Well 1') %>%
   bind_rows(.,temp)
 
 #Clean up temp files
@@ -184,14 +201,14 @@ temp<-df %>%
 
 #Convert NA in GW to SW values
 temp<-temp %>% mutate(y_sw_1 = if_else(is.na(y_sw_1),
-                                       y_sw_2-0.12, #BAsed on lining up early winter points
+                                       y_sw_2-0.09, #Based on survey
                                        y_sw_1), 
-                      site = "QB Upland Well 1") %>%
+                      site = "QB Wetland Well Shallow") %>%
   select(day, site, y_sw_1) %>% rename(waterLevel = y_sw_1)
 
 #Splice into df
 df<-df %>% 
-  filter(site != "QB Upland Well 1") %>%
+  filter(site != "QB Wetland Well Shallow") %>%
   bind_rows(.,temp)
 
 #Clean up temp files
@@ -230,67 +247,56 @@ temp<-df %>%
   mutate(waterLevel = if_else(is.na(nat), 
                               predicted,
                               nat),
-         site = "GR Wetland Well Shallow") %>%
+         site = "GN Wetland Well Shallow") %>%
   #Clean up 
   select(day, site, waterLevel)
 
 #Splice temp into df
 df<-df %>% 
-  filter(site != "GR Wetland Well Shallow") %>%
+  filter(site != "GN Wetland Well Shallow") %>%
   bind_rows(.,temp)
 
 #Clean up temp files
 remove(temp)
 
-#3.5 GN Upland well--------------------------------------------------------------------------------
-
-
+#3.6 GN Upland well--------------------------------------------------------------------------------
+#Gather data
 temp<-df %>%
   #Select time series of interest
-  filter(site == 'GN Wetland Well Shallow' |
-           site == "GR Wetland Well Shallow") %>%
+  filter(site == 'GN Upland Well 1' |
+         site == "ND Upland Well 1") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
-  rename(nat = 'GN Wetland Well Shallow',
-         res = "GR Wetland Well Shallow") %>%
+  rename(upland = 'GN Upland Well 1',
+         deep = "ND Upland Well 1") 
+
+#Develop model
+model<-lm(upland ~ poly(deep,1), data=temp)
+
+#Add model predictions and organize for output
+temp<-temp %>%
   #Apply model
-  mutate(predicted = predict(model, data.frame(res = res))) %>%
+  mutate(predicted = predict(model, data.frame(deep = deep))) %>%
   #Gap fill
-  mutate(waterLevel = if_else(is.na(nat), 
-                              predicted,
-                              nat),
-         site = "GR Wetland Well Shallow") %>%
-  #Clean up 
+  mutate(waterLevel = if_else(is.na(upland), 
+                             predicted, 
+                             upland), 
+         site = 'GN Upland Well 1') %>%
   select(day, site, waterLevel)
 
 #Splice temp into df
 df<-df %>% 
-  filter(site != "GR Wetland Well Shallow") %>%
+  filter(site != 'GN Upland Well 1') %>%
   bind_rows(.,temp)
 
 #Clean up temp files
 remove(temp)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#3.7 Export daily water level-----------------------------------------------------------------------
+write.csv(df, paste0(working_dir, "waterLevel.csv"))
 
 #4.0 Estimate Deth to Water Table-------------------------------------------------------------------
-#Create to estimate depth to water table at each location for each timestep
+#4.1 Create to estimate depth to water table at each location for each timestep
 depth_fun<-function(wetland_code){
   
   #Organize data~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -363,16 +369,17 @@ depth_fun<-function(wetland_code){
   #Apply function to all sites                   
   output<-lapply(seq(1, nrow(sample)),inner_fun) %>% bind_rows(.)
   
+  #Add wetland code
+  output$wetland<-wetland_code
+  
   #Export output
   output
 }
 
-#Apply function to wetlands of interest
-depth_fun('QB') %>%
-  mutate(station = paste(station)) %>%
-  filter(str_detect(station,"SC")) %>%
-  group_by(station) %>% summarise(Depth= mean(d_n, na.rm=T)) %>%
-  ggplot(aes(x=station, y=Depth)) +
-    geom_bar(stat="identity") + theme_bw()
+#4.2 Apply Functions
+sites<-c("BB", "DB", "DK", "GN", "ND","QB", "TB")
+df<-lapply(sites, depth_fun) %>% bind_rows(.)
 
-#Work in the AM -- check out why there are NA's in QB
+#Export file for later use
+write.csv(df, paste0(working_dir, "DepthToWaterTable.csv"))
+
