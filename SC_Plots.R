@@ -28,7 +28,7 @@ depth<-read_csv(paste0(working_dir, "DepthToWaterTable.csv"))
 #2.0 Barplot of mean depth to water table-----------------------------------------------------------
 bar_plot<-depth %>%
   #Filter to site [SC for Kelly's and AIK for Anna's]
-  filter(str_detect(station,"AIK")) %>%
+  filter(str_detect(station,"SC")) %>%
   #Convert depth to cm
   mutate(d_n = d_n*100) %>%
   #Estimate mean annual depths
@@ -65,8 +65,7 @@ level<-level %>%
 #Plot~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ts_plot<-level %>% 
   mutate(waterLevel=waterLevel*100) %>%
-  filter(site!="BB", 
-         site!="DK") %>%
+  filter(site!="GN") %>%
   ggplot(aes(day, waterLevel, color = well, linetype=well)) +
     geom_line() +
     facet_grid(rows=vars(site))+
@@ -79,5 +78,5 @@ ts_plot<-level %>%
 
 #3.0 Print plots------------------------------------------------------------------------------------
 output<-grid.arrange(bar_plot,ts_plot,nrow=1,widths = c(1,1.3))
-ggsave(file = "AIK_Depth_waterLevel.png", plot=output, path = working_dir,
+ggsave(file = "SC_Depth_waterLevel.png", plot=output, path = working_dir,
         device = "png", width = 7, height = 8, units = "in")
