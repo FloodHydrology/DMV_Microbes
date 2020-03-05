@@ -9,21 +9,12 @@
 remove(list=ls())
 
 #load appropriate packages
-devtools::install_github("khondula/rodm2")
-library(rodm2)
-library(RSQLite)
-library(DBI)
-source('db_get_ts.R')
-library(gridExtra)
 library(lubridate)
 library(tidyverse)
 
-#Define working directories
-working_dir<-"/nfs/palmer-group-data/Choptank/Nate/DepthToWaterTable/data/"
-
 #load data
-level<-read_csv(paste0(working_dir, "waterLevel.csv"))
-depth<-read_csv(paste0(working_dir, "DepthToWaterTable.csv"))
+level<-read_csv("data/waterLevel_cleaned.csv")
+depth<-read_csv("data/DepthToWaterTable.csv")
 
 #2.0 Barplot of mean depth to water table-----------------------------------------------------------
 bar_plot<-depth %>%

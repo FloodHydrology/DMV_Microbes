@@ -1,95 +1,24 @@
-####################################################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Title: Depth to water table calclulation
 #Coder: C. Nate Jones (cnjones@umd.edu)
-#Date: 5/4/2019
+#Date: 3/5/2020
 #Purpose: Estimate depth to water table at wetland sampling locations
-####################################################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#1.0 Setup workspace--------------------------------------------------------------------------------
+#1.0 Setup workspace------------------------------------------------------------
 #Clear workspace
 remove(list=ls())
 
 #download relevant libraries
-devtools::install_github("khondula/rodm2")
-library(rodm2)
-library(RSQLite)
-library(DBI)
-source('db_get_ts.R')
 library(lubridate)
 library(tidyverse)
 
-#Set relevant directories
-working_dir<-"/nfs/palmer-group-data/Choptank/Nate/DepthToWaterTable/data/"
+#download data
+df<-read_csv("data/waterLevel.csv")
+survey<-read_csv("data/xs_survey.csv")
 
-#Download relevant data
-survey<-read.csv(paste0(working_dir, 'survey.csv')) %>%
-  mutate(distance = distance_ft*.3048, 
-         elevation = elevation_ft*.3048) %>%
-  select(wetland, distance, elevation, station)
-
-#2.0 Organize wetland water level data-------------------------------------------------------------
-#Connect to database
-db<-dbConnect(RSQLite::SQLite(),paste0(working_dir,"choptank.sqlite"))
-
-#Define start and end date for downloads
-start_date<-as.POSIXct(mdy("10-1-2017"))
-end_date<-as.POSIXct(mdy("9-30-2018"))
-
-#Define download sites
-wells<-c(
-  #Bubbly Bay
-  "BB Upland Well 1", "BB Wetland Well Shallow",
-  #Dank Bay
-  "DB Upland Well 1", "DB Wetland Well Shallow",
-  #Dark Bay Wetland Well Shallow
-  "DK Upland Well 1", "DK Wetland Well Shallow",
-  #Greg Nat Wells
-  "GN Upland Well 1", "GN Wetland Well Shallow", "GR Wetland Well Shallow", "P-26 Deep Well",
-  #North Dogbone Wells
-  "ND Upland Well 1", "ND Wetland Well Shallow",
-  #Quintessential Bay
-  "QB Upland Well 1", "QB Wetland Well Shallow", "DF Wetland Well Shallow", 
-  #Tiger Paw -- B
-  "TB Upland Well 1","TB Upland Well 2","TB Upland Well 3", "TB Wetland Well Shallow") 
-
-#Add var information
-wells <- tibble(
-  site = wells, 
-  var = 'waterLevel'
-)
-
-#Define Exceptions
-wells$var[wells$site == 'P-26 Deep Well'] <- 'waterDepth'
-wells$var[wells$site ==  "GN Wetland Well Shallow"] <- 'waterDepth'
-wells$var[wells$site ==  "GR Wetland Well Shallow"] <- 'waterDepth'
-
-#Create function to download water level data
-fun<-function(n){
-  #download data
-  temp<-db_get_ts(db, wells$site[n], wells$var[n], start_date, end_date)
-  
-  #add site collumn
-  colnames(temp)<-c("Timestamp", "waterLevel")
-  temp$site = wells$site[n]
-  
-  #Export to .GlovalEnv
-  temp 
-}
-
-#Apply download function
-df<-lapply(seq(1, nrow(wells)), fun) %>% bind_rows(.)
-
-#Estimate mean daily water level for each site
-df<-df %>%
-  #truncate to date
-  mutate(day = floor_date(Timestamp, "day")) %>%
-  #group by date and site
-  select(day, waterLevel, site) %>%
-  group_by(day, site) %>%
-  summarise(waterLevel = mean(waterLevel, na.rm=T))
-
-#3.0 Gap filling------------------------------------------------------------------------------------
-#3.1 BB Upland Well--------------------------------------------------------------------------------
+#2.0 Data Cleaning and gap filling----------------------------------------------
+#2.1 BB Upland Well-------------------------------------------------------------
 #Gather data
 temp<-df %>%
   #Select time series of interest
@@ -123,7 +52,7 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.2 DB Upland Well--------------------------------------------------------------------------------
+#2.2 DB Upland Well-------------------------------------------------------------
 #Select water level data
 #Gather data
 temp<-df %>%
@@ -158,7 +87,7 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.3 TB wetland well--------------------------------------------------------------------------------
+#2.3 TB wetland well------------------------------------------------------------
 #Select water level data
 temp<-df %>%
   #Select time series of interest
@@ -188,7 +117,7 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.4 QB wetland well--------------------------------------------------------------------------------
+#2.4 QB wetland well------------------------------------------------------------
 #Select water level data
 temp<-df %>%
   #Select time series of interest
@@ -214,24 +143,17 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.5 GN wetland well--------------------------------------------------------------------------------
+#2.5 GN wetland well------------------------------------------------------------
 #organize time series for model
-temp_1<-db_get_ts(db, 
-                  "GN Wetland Well Shallow", 
-                  'waterDepth', ymd("1900-01-01"), ymd("3000-01-01")) %>%
-  mutate(Timestamp = floor_date(Timestamp, "day")) %>%
-  group_by(Timestamp) %>%
-  summarise(waterDepth = mean(waterDepth, na.rm=T)) %>%
-  rename(nat = "waterDepth")
-temp_2<-db_get_ts(db, 
-                  "GR Wetland Well Shallow", 
-                  'waterDepth', ymd("1900-01-01"), ymd("3000-01-01")) %>%
-  mutate(Timestamp = floor_date(Timestamp, "day")) %>%
-  group_by(Timestamp) %>%
-  summarise(waterDepth = mean(waterDepth, na.rm=T)) %>%
-  rename(res = "waterDepth")
-model<-left_join(temp_1, temp_2) %>% na.omit(); remove(temp_1);remove(temp_2)
-model<-lm(nat ~ poly(res,5), data=model)
+temp<-df %>% 
+  filter(site == "GN Wetland Well Shallow" |
+         site == "GR Wetland Well Shallow") %>% 
+  spread(site, -day) %>% 
+  rename(nat = "GN Wetland Well Shallow",
+         res = "GR Wetland Well Shallow")
+  
+#Create model 
+model<-lm(nat ~ poly(res,5), data=temp)
 
 temp<-df %>%
   #Select time series of interest
@@ -259,7 +181,7 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.6 GN Upland well--------------------------------------------------------------------------------
+#2.6 GN Upland well-------------------------------------------------------------
 #Gather data
 temp<-df %>%
   #Select time series of interest
@@ -292,14 +214,14 @@ df<-df %>%
 #Clean up temp files
 remove(temp)
 
-#3.7 Export daily water level-----------------------------------------------------------------------
-write.csv(df, paste0(working_dir, "waterLevel.csv"))
+#2.7 Export daily water level---------------------------------------------------
+write.csv(df, "data/waterLevel_cleaned.csv")
 
-#4.0 Estimate Deth to Water Table-------------------------------------------------------------------
-#4.1 Create to estimate depth to water table at each location for each timestep
+#3.0 Estimate Deth to Water Table-----------------------------------------------
+#3.1 Depth to water table function----------------------------------------------
 depth_fun<-function(wetland_code){
   
-  #Organize data~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #Organize data~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #Create wide df of wetland and upland water level data
   temp<-df %>%
     #Select time series of interest
@@ -326,7 +248,7 @@ depth_fun<-function(wetland_code){
     filter(str_detect(station,"Upland Well")) %>% 
     select(distance, elevation)
   
-  #Estimate depth to water table~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #Estimate depth to water table~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #Start function to estimate depth to water table for each sampling point
   inner_fun<-function(n){
     
@@ -376,10 +298,10 @@ depth_fun<-function(wetland_code){
   output
 }
 
-#4.2 Apply Functions
+#3.2 Apply Functions------------------------------------------------------------
 sites<-c("BB", "DB", "DK", "GN", "ND","QB", "TB")
 df<-lapply(sites, depth_fun) %>% bind_rows(.)
 
-#Export file for later use
-write.csv(df, paste0(working_dir, "DepthToWaterTable.csv"))
+#3.3 Export file----------------------------------------------------------------
+write.csv(df, "data/DepthToWaterTable.csv")
 
