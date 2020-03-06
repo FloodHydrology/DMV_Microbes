@@ -15,6 +15,9 @@ remove(list=ls())
 library(lubridate)
 library(tidyverse)
 
+#output location
+dir<-"/nfs/palmer-group-data/Choptank/Nate/DepthToWaterTable/"
+
 #Read data
 df<-read_csv('data/DepthToWaterTable.csv')
 
@@ -71,7 +74,8 @@ monthly<-monthly %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #3.0 Export data----------------------------------------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+write_csv(annual, paste0(dir,"christine_annual_metrics.csv"))
+write_csv(monthly, paste0(dir,"christine_monthly_metrics.csv"))
 
 
 

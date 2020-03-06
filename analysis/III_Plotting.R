@@ -1,10 +1,10 @@
-#Script Information---------------------------------------------------------------------------------
+#Script Information-------------------------------------------------------------
 #Title: Example analysis
 #Coder: C. Nate Jones (cnjones@umd.edu)
 #Date: 5/9/2019
 #Purpose: Create depth to water table plots
 
-# 1.0 Setup Workspace-------------------------------------------------------------------------------
+# 1.0 Setup Workspace-----------------------------------------------------------
 #Clear memory 
 remove(list=ls())
 
@@ -17,7 +17,11 @@ library(tidyverse)
 level<-read_csv("data/waterLevel_cleaned.csv")
 depth<-read_csv("data/DepthToWaterTable.csv")
 
-#2.0 Barplot of mean depth to water table-----------------------------------------------------------
+#output location
+dir<-"/nfs/palmer-group-data/Choptank/Nate/DepthToWaterTable/"
+list.files(dir)
+
+#2.0 Barplot of mean depth to water table---------------------------------------
 bar_plot<-depth %>%
   #Filter to site [SC for Kelly's and AIK for Anna's]
   filter(str_detect(station,"SC")) %>%
@@ -38,8 +42,8 @@ bar_plot<-depth %>%
       labs(y="Mean Depth to Water Table [cm]", 
            x= "Sampling Location")
 
-#Time series plot of water level-------------------------------------------------------------------
-#Tidy water level data~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Time series plot of water level------------------------------------------------
+#Tidy water level data~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 level<-level %>%
   #Remove Auxilery Upland Wells
   filter(!str_detect(site,'2'), 
@@ -54,7 +58,7 @@ level<-level %>%
   #Select relevant collumns
   select(site, well, day, waterLevel)
 
-#Plot~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Plot~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ts_plot<-level %>% 
   mutate(waterLevel=waterLevel*100) %>%
   filter(site!="GN") %>%
@@ -68,7 +72,7 @@ ts_plot<-level %>%
       scale_color_manual(values=c('grey70','grey30')) + 
       scale_x_date(date_labels =  "%b")
 
-#3.0 Print plots------------------------------------------------------------------------------------
+#3.0 Print plots----------------------------------------------------------------
 output<-grid.arrange(bar_plot,ts_plot,nrow=1,widths = c(1,1.3))
-ggsave(file = "SC_Depth_waterLevel.png", plot=output, path = "results/",
+ggsave(file = "SC_Depth_waterLevel.png", plot=output, path = dir,
         device = "png", width = 7, height = 8, units = "in")
