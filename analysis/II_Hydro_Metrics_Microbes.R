@@ -12,36 +12,65 @@
 remove(list=ls())
 
 #load relevant packages
-#plotting libraries
-library(xts)
-library(dygraphs)
-#database libraries
-library(devtools)
-devtools::install_github("khondula/rodm2")
-library(RSQLite)
-library(DBI)
-library(rodm2)
-#Data wrangling
 library(lubridate)
-library(readxl)
 library(tidyverse)
 
-#Define working dir
-working_dir<-"/nfs/palmer-group-data/Choptank/Nate/DepthToWaterTable/data/"
+#Read data
+df<-read_csv('data/DepthToWaterTable.csv')
 
-#Set system time zone 
-Sys.setenv(TZ="America/New_York")
+#Select SC sites
+df<-df %>% filter(str_detect(station,'SC'))
+
+#Identify threshold of interest
+threshold<-0.3
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#2.0 Download data-----------------------------------------------------------
+#2.0 Download data--------------------------------------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Define database connection
-db<-dbConnect(RSQLite::SQLite(), paste0(working_dir, "choptank.sqlite"))
+#2.1 Estimate Annual Metrics----------------------------------------------------
+#Create collumn with bianary indicator of saturation
+annual<-df %>% mutate(inun = if_else(d_n<threshold, 1,0))
 
-#Define site names of interest
-db_get_sites(db)
+#Identify individual periods of saturation
+annual<-annual %>% mutate(event = if_else(inun == 1 & lead(inun) == 0, 1, 0))
 
+#Summarise Data
+annual<-annual %>% 
+  #Group by wetland and sampling station
+  group_by(wetland, station) %>% 
+  #Summarise!
+  summarise(max_depth = max(d_n), 
+            mean_depth = mean(d_n), 
+            median_depth = median(d_n), 
+            min_depth = min(d_n), 
+            dur_day = sum(inun),
+            n_events = sum(event))
 
+#2.2 Estimate Monthly Metrics---------------------------------------------------
+#Create collumn with bianary indicator of saturation
+monthly<-df %>% mutate(inun = if_else(d_n<threshold, 1,0))
+
+#Identify individual events of saturation
+monthly<-monthly %>% mutate(event = if_else(inun == 1 & lead(inun) == 0, 1, 0))
+
+#Filter to November!
+monthly<-monthly %>% mutate(month = lubridate::month(day)) %>% filter(month==11)
+  
+#Summarise data
+monthly<-monthly %>% 
+  #Group by wetland and sampling station
+  group_by(wetland, station) %>% 
+  #Summarise!
+  summarise(max_depth = max(d_n), 
+            mean_depth = mean(d_n), 
+            median_depth = median(d_n), 
+            min_depth = min(d_n), 
+            dur_day = sum(inun),
+            n_events = sum(event))
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#3.0 Export data----------------------------------------------------------------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
