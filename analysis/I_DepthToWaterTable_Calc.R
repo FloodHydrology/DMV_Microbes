@@ -1,6 +1,6 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Title: Depth to water table calclulation
-#Coder: C. Nate Jones (cnjones@umd.edu)
+#Coder: C. Nate Jones (cnjones7@ua.edu)
 #Date: 3/5/2020
 #Purpose: Estimate depth to water table at wetland sampling locations
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
