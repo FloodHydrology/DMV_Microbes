@@ -38,11 +38,12 @@ annual <- df %>% arrange(wetland, station, day)
 annual<-annual %>% mutate(inun = if_else(d_n<threshold, 1,0))
 
 #Identify individual periods of saturation
-annual<-annual %>% mutate(event = if_else(wetland == lead(wetland) &
-                                            station==lead(station) &
-                                            inun == 1 & 
-                                            lead(inun) == 0, 
-                                          1, 0))
+annual<-annual %>% 
+  mutate(event = if_else(wetland == lead(wetland) &
+                          station==lead(station) &
+                            inun == 1 & 
+                              lead(inun) == 0, 
+                          1, 0))
 
 #Summarise Data
 annual<-annual %>% 
@@ -91,8 +92,8 @@ monthly<-monthly %>% mutate(n_events = if_else(dur_day>0 & n_events==0, 1, n_eve
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #3.0 Export data----------------------------------------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-write_csv(annual, paste0(dir,"christine_annual_metrics.csv"))
-write_csv(monthly, paste0(dir,"christine_monthly_metrics.csv"))
+write_csv(annual, "data//annual_metrics.csv")
+write_csv(monthly, "data//monthly_metrics.csv")
 
 
 

@@ -122,7 +122,7 @@ remove(temp)
 temp<-df %>%
   #Select time series of interest
   filter(site == 'QB Wetland Well Shallow' |
-         site == "DF Wetland Well Shallow") %>%
+           site == "DF Wetland Well Shallow") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
   rename(y_sw_1 = 'QB Wetland Well Shallow',
@@ -147,18 +147,18 @@ remove(temp)
 #organize time series for model
 temp<-df %>% 
   filter(site == "GN Wetland Well Shallow" |
-         site == "GR Wetland Well Shallow") %>% 
+           site == "GR Wetland Well Shallow") %>% 
   spread(site, -day) %>% 
   rename(nat = "GN Wetland Well Shallow",
          res = "GR Wetland Well Shallow")
-  
+
 #Create model 
 model<-lm(nat ~ poly(res,5), data=temp)
 
 temp<-df %>%
   #Select time series of interest
   filter(site == 'GN Wetland Well Shallow' |
-         site == "GR Wetland Well Shallow") %>%
+           site == "GR Wetland Well Shallow") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
   rename(nat = 'GN Wetland Well Shallow',
@@ -186,7 +186,7 @@ remove(temp)
 temp<-df %>%
   #Select time series of interest
   filter(site == 'GN Upland Well 1' |
-         site == "ND Upland Well 1") %>%
+           site == "ND Upland Well 1") %>%
   #Create wide dataframe
   spread(site, -day) %>% 
   rename(upland = 'GN Upland Well 1',
@@ -201,8 +201,8 @@ temp<-temp %>%
   mutate(predicted = predict(model, data.frame(deep = deep))) %>%
   #Gap fill
   mutate(waterLevel = if_else(is.na(upland), 
-                             predicted, 
-                             upland), 
+                              predicted, 
+                              upland), 
          site = 'GN Upland Well 1') %>%
   select(day, site, waterLevel)
 
@@ -226,7 +226,7 @@ depth_fun<-function(wetland_code){
   temp<-df %>%
     #Select time series of interest
     filter(site == paste0(wetland_code, ' Wetland Well Shallow') |
-           site == paste0(wetland_code, ' Upland Well 1')) %>%
+             site == paste0(wetland_code, ' Upland Well 1')) %>%
     #Create wide dataframe
     spread(site, -day) %>% 
     rename(y_sw = paste0(wetland_code, ' Wetland Well Shallow'),
@@ -234,12 +234,12 @@ depth_fun<-function(wetland_code){
   
   #Cross section data
   xs<-survey %>% filter(wetland == wetland_code) %>% select(distance, elevation)
-
+  
   #Define points of interest
   sample<- survey %>% 
     filter(wetland == wetland_code) %>% 
     filter(str_detect(station,"AIK") |
-           str_detect(station, 'SC')) %>% 
+             str_detect(station, 'SC')) %>% 
     select(station, distance, elevation)
   
   #Define Wells [for now, assume wetladn well x = 0]
@@ -274,11 +274,11 @@ depth_fun<-function(wetland_code){
                #If sampling the sampling location is beyond upland well
                if_else(x_n>=x_gw, 
                        y_gw,
-                  #If sampling location is inundated
-                  if_else(x_n<=x_sw, 
-                          y_sw, 
-                    #If sampling location between inunation and upland well
-                    (y_gw-y_sw)*(x_n-x_sw)/(x_gw-x_sw) + y_sw)))
+                       #If sampling location is inundated
+                       if_else(x_n<=x_sw, 
+                               y_sw, 
+                               #If sampling location between inunation and upland well
+                               (y_gw-y_sw)*(x_n-x_sw)/(x_gw-x_sw) + y_sw)))
     
     #Estimate depth
     temp<-temp %>% mutate(d_n = sample$elevation - y_n, 
@@ -287,7 +287,7 @@ depth_fun<-function(wetland_code){
     #Organize and export
     temp %>% select(day, d_n, station)
   }
-
+  
   #Apply function to all sites                   
   output<-lapply(seq(1, nrow(sample)),inner_fun) %>% bind_rows(.)
   
