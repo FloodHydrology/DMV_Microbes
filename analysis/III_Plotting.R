@@ -42,7 +42,7 @@ hyd<-df %>%
                 fill="#377eb8", 
                 col='grey30',
                 alpha=0.7) + 
-    geom_line(aes(y = median, x = day), lwd=1,col="grey30")+
+    geom_line(aes(y = median, x = day), col="grey30")+
     theme_bw() + 
       ylab("Wetland Water Level") + 
       xlab(NULL) + 
