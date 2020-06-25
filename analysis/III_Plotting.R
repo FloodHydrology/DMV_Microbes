@@ -67,16 +67,17 @@ hyd<-ggplot() +
       ymin = -0.30, 
       ymax = 0), 
     fill='grey70', alpha = 0.9) +
-  #E
-  geom_ribbon(aes(ymin = e$lwr, ymax = e$upr, x = e$day, fill='E'), 
-              col='grey90', lwd=0.25) +
-  geom_line(aes(x=e$day, y=e$median), 
-            col=line_col) +
   #D
   geom_ribbon(aes(ymin = d$lwr, ymax = d$upr, x = d$day, fill='D'),
               alpha=ribbon_alpha) +
   geom_line(aes(x=d$day, y=d$median), 
             col=line_col) +
+  #E
+  geom_ribbon(aes(ymin = e$lwr, ymax = e$upr, x = e$day, fill='E'), 
+              col='grey90', lwd=0.25) +
+  geom_line(aes(x=e$day, y=e$median), 
+            col=line_col) +
+  
   #C
   geom_ribbon(aes(ymin = c$lwr, ymax = c$upr, x = c$day, fill='C'),
               alpha=ribbon_alpha) +
