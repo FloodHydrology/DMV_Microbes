@@ -42,7 +42,7 @@ hyd<-df %>%
                 fill="#377eb8", 
                 col='grey30',
                 alpha=0.7) + 
-    geom_text(x = 450, y=0.22, label = "WY2018")+
+    geom_line(aes(y = median, x = day), lwd=1,col="grey30")+
     theme_bw() + 
       ylab("Wetland Water Level") + 
       xlab(NULL) + 
@@ -75,7 +75,7 @@ dep<-depth %>%
                fill = '#33a02c',
                alpha = 70) + 
     theme_bw() + 
-      ylab("Water Level [m]") + 
+      ylab("Median Water Level [m]") + 
       xlab(NULL) + 
       theme(axis.title = element_text(size = 14),
             axis.text = element_text(size = 12)) 
@@ -102,7 +102,7 @@ dur<-metrics %>%
              fill = '#ff7f00',
              alpha = 70) + 
   theme_bw() +
-  ylab("Inundation Duration [Days]") + 
+  ylab("Saturation Duration [Days]") + 
   xlab(NULL) + 
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 12)) 
@@ -129,12 +129,12 @@ freq<-metrics %>%
              fill = '#6a3d9a',
              alpha = 70) + 
   theme_bw() + 
-  ylab("Inundation Frequency [Events]") + 
+  ylab("Saturation Frequency [Events]") + 
   xlab(NULL) + 
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 12)) 
 
 #Print plot~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-png("hydro_regime.png", res=300, width = 7, height = 5.5, units = 'in')
+png("docs/hydro_regime.png", res=300, width = 7, height = 5.5, units = 'in')
 hyd + dep + dur + freq + plot_layout(ncol=2)
 dev.off()
