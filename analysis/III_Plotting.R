@@ -29,7 +29,7 @@ df<-depth %>%
   mutate(d_n = d_n*100) %>% 
   #seleect wetland well data
   filter(str_detect(station, 'SC')) %>% 
-  #create sampling location col
+  #create Hydrologic Zone col
   mutate(loc = substr(station, 4,4)) %>% 
   #Convert from depth to waterLevel
   mutate(waterLevel = -1*d_n) %>% 
@@ -41,7 +41,7 @@ df<-depth %>%
     lwr    = quantile(waterLevel, 0.25, na.rm = T), 
     upr    = quantile(waterLevel, 0.75, na.rm = T))
 
-#Subset by sampling location
+#Subset by Hydrologic Zone
 a<-df %>% filter(loc=='A')
 b<-df %>% filter(loc=='B')
 c<-df %>% filter(loc=='C')
@@ -136,7 +136,7 @@ dep<-depth %>%
                alpha = 70) + 
     theme_bw() + 
       ylab("Water Level [cm]") + 
-      xlab("Sampling Location") + 
+      xlab("Hydrologic Zone") + 
       theme(axis.title = element_text(size = 14),
             axis.text = element_text(size = 12)) 
 
@@ -164,7 +164,7 @@ dur<-metrics %>%
              alpha = 70) + 
   theme_bw() +
   ylab("Saturation Duration [Days]") + 
-  xlab('Sampling Location') + 
+  xlab('Hydrologic Zone') + 
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 12)) 
 
@@ -191,14 +191,14 @@ freq<-metrics %>%
              alpha = 70) + 
   theme_bw() + 
   ylab("Saturation Frequency [Events]") + 
-  xlab("Sampling Location") + 
+  xlab("Hydrologic Zone") + 
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 12)) 
 
 #2.5 Print plot---------------------------------------------
-#png("docs/hydro_regime.png", res=300, width = 7, height = 6, units = 'in')
+png("docs/hydro_regime.png", res=300, width = 7, height = 6, units = 'in')
 hyd + dep + dur + freq + plot_layout(ncol=2)
-#dev.off()
+dev.off()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #2.6 Intext calculations--------------------------------------------------------
@@ -232,3 +232,4 @@ metrics %>%
   group_by(transect) %>% 
   summarise(mean = mean(n_events, na.rm=T), 
             sem  = sd(n_events, na.rm=T)/sqrt(n()))
+
