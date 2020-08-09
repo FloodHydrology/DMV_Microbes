@@ -116,8 +116,11 @@ dep<-depth %>%
   mutate(d_n = -1*d_n) %>% 
   #Select SC stations
   filter(str_detect(station, 'SC')) %>% 
-  #Summarise duration by transect
+  #Summarise duration by transect and station
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(d_n = mean(d_n, na.rm=T), na.rm=T) %>% 
+  #Summarise by transect
   group_by(transect) %>% 
   summarise(mean = mean(d_n, na.rm=T)*100, 
             upr    = (mean(d_n, na.rm=T) + sd(d_n, na.rm = T)/sqrt(n()))*100,
@@ -147,6 +150,8 @@ dur<-metrics %>%
   filter(str_detect(station, 'SC')) %>% 
   #Summarise duration by transect
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(dur_day = mean(dur_day, na.rm=T), na.rm=T) %>% 
   group_by(transect) %>% 
   summarise(mean = mean(dur_day, na.rm=T), 
             upr    = mean(dur_day, na.rm=T) + sd(dur_day, na.rm=T)/sqrt(n()),
@@ -174,6 +179,8 @@ freq<-metrics %>%
   filter(str_detect(station, 'SC')) %>% 
   #Summarise duration by transect
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(n_events = mean(n_events, na.rm=T), na.rm=T) %>% 
   group_by(transect) %>% 
   summarise(mean = mean(n_events, na.rm=T), 
             upr    = mean(n_events, na.rm=T)+sd(n_events, na.rm=T)/sqrt(n()),
@@ -196,7 +203,7 @@ freq<-metrics %>%
         axis.text = element_text(size = 12)) 
 
 #2.5 Print plot---------------------------------------------
-png("docs/hydro_regime.png", res=300, width = 7, height = 6, units = 'in')
+tiff("docs/hydro_regime.tiff", res=300, width = 7, height = 6, units = 'in')
 hyd + dep + dur + freq + plot_layout(ncol=2)
 dev.off()
 
@@ -208,8 +215,11 @@ depth %>%
   mutate(d_n = -1*d_n) %>% 
   #Select SC stations
   filter(str_detect(station, 'SC')) %>% 
-  #Summarise duration by transect
+  #Summarise duration by transect and station
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(d_n = mean(d_n, na.rm=T), na.rm=T) %>% 
+  #Summarise by transect
   group_by(transect) %>% 
   summarise(mean_cm = mean(d_n, na.rm=T)*100, 
             sem_cm  = sd(d_n, na.rm = T)*100/sqrt(n()))
@@ -219,6 +229,8 @@ metrics %>%
   filter(str_detect(station, 'SC')) %>% 
   #Summarise duration by transect
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(dur_day = mean(dur_day, na.rm=T), na.rm=T) %>% 
   group_by(transect) %>% 
   summarise(mean_day = mean(dur_day, na.rm=T), 
             sem_day  = sd(dur_day, na.rm=T)/sqrt(n()))
@@ -229,6 +241,8 @@ metrics %>%
   filter(str_detect(station, 'SC')) %>% 
   #Summarise duration by transect
   mutate(transect = substr(station,4,4)) %>% 
+  group_by(transect, wetland) %>%
+  summarise(n_events = mean(n_events, na.rm=T), na.rm=T) %>% 
   group_by(transect) %>% 
   summarise(mean = mean(n_events, na.rm=T), 
             sem  = sd(n_events, na.rm=T)/sqrt(n()))
