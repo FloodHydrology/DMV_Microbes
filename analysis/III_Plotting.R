@@ -20,6 +20,10 @@ library(tidyverse)
 depth<-read_csv("data//DepthToWaterTable.csv")
 metrics<-read_csv("data//annual_metrics.csv")
 
+#Remove SC-A because it was inundaded and not samples
+depth<-depth %>% filter(!(station == 'SC-A' & wetland == 'QB'))
+metrics<-metrics %>% filter(!(station == 'SC-A' & wetland == 'QB'))
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2.0 Hydrologic Regime Plots-------------------------------
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,8 +42,8 @@ df<-depth %>%
   #Summarise water level data
   summarise(
     mean = mean(waterLevel, na.rm = T),
-    lwr    = quantile(waterLevel, 0.25, na.rm = T), 
-    upr    = quantile(waterLevel, 0.75, na.rm = T))
+    lwr    = mean - sd(waterLevel, na.rm = T)/sqrt(n()), 
+    upr    = mean + sd(waterLevel, na.rm = T)/sqrt(n()))
 
 #Subset by Hydrologic Zone
 a<-df %>% filter(loc=='A')
@@ -204,6 +208,10 @@ freq<-metrics %>%
 
 #2.5 Print plot---------------------------------------------
 tiff("docs/hydro_regime.tiff", res=300, width = 7, height = 6, units = 'in')
+hyd + dep + dur + freq + plot_layout(ncol=2)
+dev.off()
+
+pdf("docs/hydro_regime.pdf", width = 7, height = 6)
 hyd + dep + dur + freq + plot_layout(ncol=2)
 dev.off()
 
