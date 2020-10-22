@@ -111,7 +111,8 @@ hyd<-ggplot() +
     theme(axis.title = element_text(size = 14),
           axis.text = element_text(size = 12),
           legend.position = c("bottom"), 
-          legend.margin = margin(t=-2, unit="lines"))
+          legend.margin = margin(t=-2, unit="lines")) +
+    plot_annotation(tag_levels = 'A', tag_suffix = ".")
 
 
 #2.2 Water Level Plot---------------------------------------
