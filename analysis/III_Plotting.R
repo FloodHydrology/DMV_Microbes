@@ -112,7 +112,7 @@ hyd<-ggplot() +
           axis.text = element_text(size = 12),
           legend.position = c("bottom"), 
           legend.margin = margin(t=-2, unit="lines")) +
-    plot_annotation(tag_levels = 'A', tag_suffix = ".")
+    plot_annotation(tag_levels = 'A', tag_suffix = ".  ")
 
 
 #2.2 Water Level Plot---------------------------------------
@@ -208,7 +208,7 @@ freq<-metrics %>%
         axis.text = element_text(size = 12)) 
 
 #2.5 Print plot---------------------------------------------
-tiff("docs/hydro_regime.tiff", res=300, width = 7, height = 6, units = 'in')
+tiff("docs/hydro_regime.tiff", res=285, width = 7, height = 6, units = 'in')
 hyd + dep + dur + freq + plot_layout(ncol=2)
 dev.off()
 
